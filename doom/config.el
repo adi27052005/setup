@@ -21,6 +21,13 @@
 ;; See 'C-h v doom-font' for documentation and more examples of what they
 ;; accept. For example:
 ;;
+; (add-hook 'doom-startup-hook (lambda () (org-toggle-pretty-entities t)))
+; (after! org
+;   (org-toggle-pretty-entities))
+(after! org
+  (add-hook 'org-mode-hook (lambda () (org-toggle-pretty-entities))))
+
+
 (setq doom-font (font-spec :family "Jetbrains Mono" :size 15 :weight 'bold)
      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 16))
 ;;
