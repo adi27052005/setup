@@ -10,6 +10,9 @@
   - [[#load-evil-mode][Load Evil Mode]]
   - [[#general-keybindings][General Keybindings]]
   - [[#making-global-keybinds-for-copy--paste][Making global keybinds for copy & paste]]
+- [[#all-the-icons][ALL THE ICONS]]
+- [[#app-launcher][APP LAUNCHER]]
+- [[#buffer-move][BUFFER-MOVE]]
 - [[#fonts][FONTS]]
   - [[#setting-the-font-face][Setting the font face]]
   - [[#zooming-inout-keybinds][Zooming In/Out Keybinds]]
@@ -22,8 +25,15 @@
   - [[#enabling-org-bullets][Enabling Org Bullets]]
   - [[#disabling-electric-indent][Disabling Electric Indent]]
   - [[#requiring-org-tempo][Requiring org-tempo]]
+  - [[#toggling-org-pretty-mode][Toggling Org Pretty Mode]]
+- [[#rainbow-mode][RAINBOW MODE]]
 - [[#reload-emacs-function][RELOAD EMACS FUNCTION]]
+- [[#shells-and-terminals][SHELLS AND TERMINALS]]
+  - [[#eshell][Eshell]]
+  - [[#vterm][Vterm]]
+  - [[#vterm-toggle][Vterm-Toggle]]
 - [[#sudo-edit][SUDO EDIT]]
+- [[#theme][THEME]]
 - [[#whichkey][WHICHKEY]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
@@ -116,7 +126,6 @@
   ;; (elpaca nil (message "deferred"))
 #+end_src
 
-
 ** General Keybindings
 
 #+begin_src emacs-lisp
@@ -134,6 +143,7 @@
   (adi/leader-keys
       "." '(find-file :wk "Find File")
       "f c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit Emacs Config")
+      "f r" '(counsel-recentf :wk "Find Recent Files") 
       "TAB TAB" '(comment-line :wk "Comment Line")
   )
 
@@ -148,12 +158,14 @@
   )
 
   (adi/leader-keys
-      "e" '(:ignore t :wk "Evaluate")
+      "e" '(:ignore t :wk "EShell/Evaluate")
       "e b" '(eval-buffer :wk "Evaluate elisp in buffer")
       "e d" '(eval-defun :wk "Evaluate defun containing or after point")
       "e e" '(eval-expression :wk "Evaluate and elisp expression")
       "e l" '(eval-last-sexp :wk "Evaluate elisp expression before point")
       "e r" '(eval-region :wk "Evaluate elisp in region")
+      "e h" '(counsel-esh-history :which-key "Eshell history")
+      "e s" '(eshell :which-key "Eshell")
   )
   (adi/leader-keys
       "h" '(:ignore t :wk "Help")
@@ -166,7 +178,27 @@
       "t" '(:ignore t :wk "Toggle")
       "t l" '(display-line-numbers-mode :wk "Toggle line numbers")
       "t t" '(visual-line-mode :wk "Toggle truncated lines")
+      "t v" '(vterm-toggle :wk "Toggle vterm")
   )
+  (adi/leader-keys
+    "w" '(:ignore t :wk "Windows")
+    ;; Window splits
+    "w c" '(evil-window-delete :wk "Close window")
+    "w n" '(evil-window-new :wk "New window")
+    "w s" '(evil-window-split :wk "Horizontal split window")
+    "w v" '(evil-window-vsplit :wk "Vertical split window")
+    ;; Window motions
+    "w h" '(evil-window-left :wk "Window left")
+    "w j" '(evil-window-down :wk "Window down")
+    "w k" '(evil-window-up :wk "Window up")
+    "w l" '(evil-window-right :wk "Window right")
+    "w w" '(evil-window-next :wk "Goto next window")
+    ;; Move Windows
+    "w H" '(buf-move-left :wk "Buffer move left")
+    "w J" '(buf-move-down :wk "Buffer move down")
+    "w K" '(buf-move-up :wk "Buffer move up")
+    "w L" '(buf-move-right :wk "Buffer move right")
+    )
   )
 
 #+end_src
@@ -207,11 +239,121 @@
 
 #+end_src
 
+* ALL THE ICONS
+This is an icon set that can be used with dashboard, dired, ibuffer and other Emacs programs.
+
+#+begin_src emacs-lisp
+(use-package all-the-icons
+  :ensure t
+  :if (display-graphic-p))
+
+(use-package all-the-icons-dired
+  :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
+#+end_src
+
+* APP LAUNCHER
+Since we have counsel installed, we can use counsel-linux-app to launch our Linux apps.  It list the apps by their executable command, so it’s kind of tricky to use.
+
+#+begin_src emacs-lisp
+(defun emacs-counsel-launcher ()
+  "Create and select a frame called emacs-counsel-launcher which consists only of a minibuffer and has specific dimensions. Runs counsel-linux-app on that frame, which is an emacs command that prompts you to select an app and open it in a dmenu like behaviour. Delete the frame after that command has exited"
+  (interactive)
+  (with-selected-frame 
+    (make-frame '((name . "emacs-run-launcher")
+                  (minibuffer . only)
+                  (fullscreen . 0) ; no fullscreen
+                  (undecorated . t) ; remove title bar
+                  ;;(auto-raise . t) ; focus on this frame
+                  ;;(tool-bar-lines . 0)
+                  ;;(menu-bar-lines . 0)
+                  (internal-border-width . 10)
+                  (width . 80)
+                  (height . 11)))
+                  (unwind-protect
+                    (counsel-linux-app)
+                    (delete-frame))))
+#+end_src
+
+* BUFFER-MOVE
+
+#+begin_src emacs-lisp
+  (require 'windmove)
+
+;;;###autoload
+(defun buf-move-up ()
+  "Swap the current buffer and the buffer above the split.
+If there is no split, ie now window above the current one, an
+error is signaled."
+;;  "Switches between the current buffer, and the buffer above the
+;;  split, if possible."
+  (interactive)
+  (let* ((other-win (windmove-find-other-window 'up))
+	 (buf-this-buf (window-buffer (selected-window))))
+    (if (null other-win)
+        (error "No window above this one")
+      ;; swap top with this one
+      (set-window-buffer (selected-window) (window-buffer other-win))
+      ;; move this one to top
+      (set-window-buffer other-win buf-this-buf)
+      (select-window other-win))))
+
+;;;###autoload
+(defun buf-move-down ()
+"Swap the current buffer and the buffer under the split.
+If there is no split, ie now window under the current one, an
+error is signaled."
+  (interactive)
+  (let* ((other-win (windmove-find-other-window 'down))
+	 (buf-this-buf (window-buffer (selected-window))))
+    (if (or (null other-win) 
+            (string-match "^ \\*Minibuf" (buffer-name (window-buffer other-win))))
+        (error "No window under this one")
+      ;; swap top with this one
+      (set-window-buffer (selected-window) (window-buffer other-win))
+      ;; move this one to top
+      (set-window-buffer other-win buf-this-buf)
+      (select-window other-win))))
+
+;;;###autoload
+(defun buf-move-left ()
+"Swap the current buffer and the buffer on the left of the split.
+If there is no split, ie now window on the left of the current
+one, an error is signaled."
+  (interactive)
+  (let* ((other-win (windmove-find-other-window 'left))
+	 (buf-this-buf (window-buffer (selected-window))))
+    (if (null other-win)
+        (error "No left split")
+      ;; swap top with this one
+      (set-window-buffer (selected-window) (window-buffer other-win))
+      ;; move this one to top
+      (set-window-buffer other-win buf-this-buf)
+      (select-window other-win))))
+
+;;;###autoload
+(defun buf-move-right ()
+"Swap the current buffer and the buffer on the right of the split.
+If there is no split, ie now window on the right of the current
+one, an error is signaled."
+  (interactive)
+  (let* ((other-win (windmove-find-other-window 'right))
+	 (buf-this-buf (window-buffer (selected-window))))
+    (if (null other-win)
+        (error "No right split")
+      ;; swap top with this one
+      (set-window-buffer (selected-window) (window-buffer other-win))
+      ;; move this one to top
+      (set-window-buffer other-win buf-this-buf)
+      (select-window other-win))))
+
+#+end_src
+
 * FONTS
 + Defining the various fonts emacs will use.
 
 ** Setting the font face
 #+begin_src emacs-lisp
+    (add-to-list 'default-frame-alist '(font . "JetBrains Mono NerdFont"))
     (add-to-list 'default-frame-alist '(weight . 'Bold))
     (setq-default line-spacing 0.1)
     (set-face-attribute 'default nil
@@ -254,7 +396,7 @@ Let's make GNU Emacs look a "little" better.
 #+begin_src emacs-lisp
 (menu-bar-mode -1)
 (tool-bar-mode -1)
-(scroll-bar-mode -1)
+(scroll-bar-mode 1)
 #+end_src
 
 ** Display Line Numbers and Truncated Lines
@@ -347,6 +489,19 @@ Org-tempo is not a separate package but a module within org that can be enabled.
   (require 'org-tempo)
 #+end_src
 
+** Toggling Org Pretty Mode
+
+#+begin_src emacs-lisp
+  (add-hook 'org-mode-hook (lambda () (org-toggle-pretty-entities)))
+#+end_src
+
+* RAINBOW MODE
+
+#+begin_src emacs-lisp
+  (use-package rainbow-mode
+    :hook org-mode prog-mode)
+#+end_src
+
 * RELOAD EMACS FUNCTION
 This is just an example of how to create a simple function in Emacs.  Use this function to reload Emacs after adding changes to the config.  Yes, I am loading the user-init-file twice in this function, which is a hack because for some reason, just loading the user-init-file once does not work properly.
 
@@ -355,6 +510,68 @@ This is just an example of how to create a simple function in Emacs.  Use this f
   (interactive)
   (load-file user-init-file)
   (load-file user-init-file))
+#+end_src
+
+* SHELLS AND TERMINALS
+
+** Eshell
+Eshell is an Emacs ‘shell’ that is written in Elisp.
+
+#+begin_src emacs-lisp
+
+  (use-package eshell-syntax-highlighting
+  :after esh-mode
+  :config
+  (eshell-syntax-highlighting-global-mode +1))
+
+;; eshell-syntax-highlighting -- adds fish/zsh-like syntax highlighting.
+;; eshell-rc-script -- your profile for eshell; like a bashrc for eshell.
+;; eshell-aliases-file -- sets an aliases file for the eshell.
+  
+(setq eshell-rc-script (concat user-emacs-directory "eshell/profile")
+      eshell-aliases-file (concat user-emacs-directory "eshell/aliases")
+      eshell-history-size 5000
+      eshell-buffer-maximum-lines 5000
+      eshell-hist-ignoredups t
+      eshell-scroll-to-bottom-on-input t
+      eshell-destroy-buffer-when-process-dies t
+      eshell-visual-commands'("bash" "fish" "htop" "ssh" "top" "zsh"))
+
+#+end_src
+
+** Vterm
+Vterm is a terminal emulator within Emacs.  The ‘shell-file-name’ setting sets the shell to be used in M-x shell, M-x term, M-x ansi-term and M-x vterm.  By default, the shell is set to ‘fish’ but could change it to ‘bash’ or ‘zsh’ if you prefer.
+
+#+begin_src emacs-lisp
+  (use-package vterm
+  :config
+  (setq shell-file-name "/bin/zsh"
+        vterm-max-scrollback 5000))
+#+end_src
+
+** Vterm-Toggle
+vterm-toggle toggles between the vterm buffer and whatever buffer you are editing.
+
+#+begin_src emacs-lisp
+  (use-package vterm-toggle
+    :after vterm
+    :config
+    (setq vterm-toggle-fullscreen-p nil)
+    (setq vterm-toggle-scope 'project)
+    (add-to-list 'display-buffer-alist
+                 '((lambda (buffer-or-name _)
+                       (let ((buffer (get-buffer buffer-or-name)))
+                         (with-current-buffer buffer
+                           (or (equal major-mode 'vterm-mode)
+                               (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
+                    (display-buffer-reuse-window display-buffer-at-bottom)
+                    ;;(display-buffer-reuse-window display-buffer-in-direction)
+                    ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+                    ;;(direction . bottom)
+                    ;;(dedicated . t) ;dedicated is supported in emacs27
+                    (reusable-frames . visible)
+                    (window-height . 0.3))))
+
 #+end_src
 
 * SUDO EDIT
@@ -368,6 +585,12 @@ This is just an example of how to create a simple function in Emacs.  Use this f
   )
 )
 
+#+end_src
+
+* THEME
+#+begin_src emacs-lisp
+    (add-to-list 'custom-theme-load-path "~/.config/emacs/themes/")
+    (load-theme 'timu-rouge t)
 #+end_src
 
 * WHICHKEY
@@ -388,6 +611,5 @@ This is just an example of how to create a simple function in Emacs.  Use this f
 	which-key-max-description-length 25
 	which-key-allow-imprecise-window-fit t
 	which-key-separator " "))
-
 
 #+end_src

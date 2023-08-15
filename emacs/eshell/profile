@@ -1,0 +1,1 @@
+printf "\nEmacs User\n" | lolcat
