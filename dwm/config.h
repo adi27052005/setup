@@ -12,16 +12,20 @@ static const int horizpadbar        = 6;        /* horizontal padding for status
 static const int vertpadbar         = 7;        /* vertical padding for statusbar */
 static const char *fonts[]          = { "jetbrainsmononerdfont:size=8" };
 static const char dmenufont[]       = "jetbrainsmononerdfont:size=8";
-static const char col_gray1[]       = "#191e2a";
-static const char col_gray2[]       = "#444444";
-static const char col_gray3[]       = "#bbbbbb";
+static const char col_gray1[]       = "#0a0217";
+static const char col_gray2[]       = "#111111";
+/* static const char col_gray3[]       = "#bbbbbb"; */
+static const char col_gray3[]       = "#ffffff";
 static const char col_gray4[]       = "#000000";
-static const char col_cyan[]        = "#b1023c";
+static const char col_cyan[]        = "#a272f0";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
 	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
-	[SchemeTitle]  = { col_gray3, "#262e40",  col_cyan  },
+	/* [SchemeTitle]  = { col_gray3, "#15052e",  col_cyan  }, */
+   	[SchemeHov]  = { col_gray4, col_cyan,  col_cyan  },
+	[SchemeHid]  = { col_cyan,  col_gray1, col_cyan  },
+
 };
 
 /* tagging */
@@ -38,6 +42,7 @@ static const Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
 	{ "firefox",  NULL,       NULL,       1 << 1,	    0,           -1 },
+	{ "brave-browser",  NULL,       NULL,       1 << 1,	    0,           -1 },
 	{ "Emacs", "emacs", "emacs-run-launcher",   0,            1,           -1 },
 };
 
@@ -83,14 +88,16 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY|ShiftMask,             XK_j,      rotatestack,    {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_k,      rotatestack,    {.i = -1 } },
-	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
-	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+	{ MODKEY,                       XK_j,      focusstackvis,  {.i = +1 } },
+	{ MODKEY,                       XK_k,      focusstackvis,  {.i = -1 } },
+	{ MODKEY|ControlMask,           XK_j,      focusstackhid,  {.i = +1 } },
+	{ MODKEY|ControlMask,           XK_k,      focusstackhid,  {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	/* { MODKEY|ShiftMask,             XK_Return, zoom,           {0} }, */
-	{ MODKEY|ShiftMask,             XK_Return, spawn,           SHCMD("emacsclient -c -a \"emacs\"") },
+	{ MODKEY|ShiftMask,             XK_Return, spawn,           SHCMD("emacs") },
 	{ MODKEY|ShiftMask,             XK_Tab,    view,           {0} },
 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
@@ -106,6 +113,9 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
+	{ MODKEY,                       XK_s,      show,           {0} },
+	{ MODKEY|ShiftMask,             XK_s,      showall,        {0} },
+	{ MODKEY|ShiftMask,             XK_h,      hide,           {0} },
 	// { MODKEY,                       XK_minus,  setgaps,        {.i = -1 } },
 	// { MODKEY,                       XK_equal,  setgaps,        {.i = +1 } },
 	// { MODKEY|ShiftMask,             XK_equal,  setgaps,        {.i = 0  } },
@@ -120,7 +130,8 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
 
-	{ MODKEY|ShiftMask,		XK_w,	   spawn,	   SHCMD("firefox") },
+	{ MODKEY|ShiftMask,		XK_w,	   spawn,	   SHCMD("brave") },
+	{ MODKEY|ShiftMask,		XK_t,	   spawn,	   SHCMD("kitty -e python3 $HOME/theme.py") },
 	// { 0,				XF86XK_AudioLowerVolume, spawn, SHCMD("pactl set-sink-volume 0 -5% && kill $(ps -ef | grep sleep -m1 | awk '{print $2}')") },
 	{ 0,				XF86XK_AudioLowerVolume, spawn, SHCMD("$HOME/.config/scripts/vol_down.sh") },
 	// { 0,				XF86XK_AudioRaiseVolume, spawn, SHCMD("pactl set-sink-volume 0 +5% && kill $(ps -ef | grep sleep -m1 | awk '{print $2}')") },
@@ -145,6 +156,7 @@ static const Button buttons[] = {
 	/* click                event mask      button          function        argument */
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
 	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
+	{ ClkWinTitle,          0,              Button1,        togglewin,      {0} },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
 	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
