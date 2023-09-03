@@ -46,21 +46,21 @@ require("lazy").setup({
  },
 },
 
-{
-  "folke/noice.nvim",
-  event = "VeryLazy",
-  opts = {
-    -- add any options here
-  },
-  dependencies = {
-    -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
-    "MunifTanjim/nui.nvim",
-    -- OPTIONAL:
-    --   `nvim-notify` is only needed, if you want to use the notification view.
-    --   If not available, we use `mini` as the fallback
-    "rcarriga/nvim-notify",
-    }
-},
+-- {
+--   "folke/noice.nvim",
+--   event = "VeryLazy",
+--   opts = {
+--     -- add any options here
+--   },
+--   dependencies = {
+--     -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
+--     "MunifTanjim/nui.nvim",
+--     -- OPTIONAL:
+--     --   `nvim-notify` is only needed, if you want to use the notification view.
+--     --   If not available, we use `mini` as the fallback
+--     "rcarriga/nvim-notify",
+--     }
+-- },
 
 {
   "folke/zen-mode.nvim",
@@ -86,7 +86,18 @@ require("lazy").setup({
 { "tpope/vim-commentary" },
 { "tpope/vim-markdown" },
 { "tpope/vim-fugitive" },
-{ "tpope/vim-sleuth" },
+-- { "tpope/vim-sleuth" },
+{ "LunarVim/horizon.nvim" },
+{'akinsho/toggleterm.nvim', version = "*", config = true},
+-- { "bluz71/vim-nightfly-colors" },
+{ "bluz71/vim-nightfly-guicolors" },
+{ "bluz71/vim-moonfly-colors" },
+-- { "echasnovski/mini.nvim" },
+
+{
+    "nvim-telescope/telescope-file-browser.nvim",
+    dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
+},
 
 {
     -- Set lualine as statusline
@@ -204,6 +215,7 @@ require("lazy").setup({
   },
 
   { "iamcco/markdown-preview.nvim" },
+  { "vimwiki/vimwiki" },
 
   {
     "nvim-neorg/neorg",
@@ -269,7 +281,7 @@ require("catppuccin").setup({
 
 
 --select all
-vim.keymap.set({'n','v'}, '<c-a>', 'ggVGy')
+vim.keymap.set({'n','v'}, '<c-a>', 'ggVG')
 
 -- nvim-tree
 vim.keymap.set('n', '<c-n>', ':NvimTreeFindFileToggle<CR>')
@@ -448,6 +460,7 @@ local servers = {
   clangd = {},
   -- gopls = {},
   pyright = {},
+  bashls = {},
   -- rust_analyzer = {},
   tsserver = {},
   html = { filetypes = { 'html', 'twig', 'hbs'} },
@@ -537,9 +550,6 @@ cmp.setup {
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
 
-
-
-
 vim.cmd [[set cursorline]]
 vim.cmd [[set nohlsearch]]
 vim.cmd [[ set scrolloff=8 ]]
@@ -548,7 +558,7 @@ vim.cmd [[ TSEnable autotag ]]
 
 -- vim.keymap.set('n', '<c-x>', ':w | !g++ -o myprogram % && ./myprogram<CR>')
 -- vim.keymap.set('n', '<c-t>', ':ToggleTerm size=50 direction=vertical<CR>')
-vim.keymap.set('n', '<c-x>', ':!case $(printf % | cut -d "." -f2) in; "cpp") g++ -o output % && ./output;; "py") python3 %; esac<CR>')
+vim.keymap.set('n', '<c-x>', ':!case $(printf % | cut -d "." -f2) in; "cpp") g++ -o output % && ./output && rm output;; "py") python3 %; esac<CR>')
 
 vim.keymap.set('n', '<Tab><Right>', ':BufferNext<CR>')
 vim.keymap.set('n', '<Tab>j', ':BufferNext<CR>')
@@ -579,4 +589,52 @@ vim.o.termguicolors = true
 vim.cmd.colorscheme("catppuccin-mocha")
 
 vim.keymap.set('n', '<leader>ht', ':Telescope colorscheme<CR>')
+vim.keymap.set('n', '<leader>fw', ':Telescope live_grep<CR>')
+vim.keymap.set('n', '<leader>.', ':Telescope file_browser<CR>')
 vim.keymap.set('n', '<leader>op', ':NvimTreeToggle<CR>')
+vim.cmd [[ set autoindent expandtab tabstop=4 shiftwidth=4 ]]
+vim.cmd [[ set novisualbell ]]
+vim.keymap.set('t', '<C-t>', '<C-\\><C-n>:ToggleTerm direction=horizontal<CR>')
+vim.keymap.set('i', '<C-t>', '<Esc>:ToggleTerm direction=horizontal<CR>')
+vim.keymap.set('n', '<C-t>', ':ToggleTerm direction=horizontal<CR>')
+
+-- You don't need to set any of these options.
+-- IMPORTANT!: this is only a showcase of how you can set default options!
+require("telescope").setup {
+  extensions = {
+    file_browser = {
+      theme = "ivy",
+      -- disables netrw and use telescope-file-browser in its place
+      hijack_netrw = true,
+      mappings = {
+        ["i"] = {
+          -- your custom insert mode mappings
+        },
+        ["n"] = {
+          -- your custom normal mode mappings
+        },
+      },
+    },
+  },
+}
+-- To get telescope-file-browser loaded and working with telescope,
+-- you need to call load_extension, somewhere after setup function:
+require("telescope").load_extension "file_browser"
+
+-- Create an autocmd to trigger cursor placement when "int main" is typed
+vim.api.nvim_exec([[
+    augroup IntMainMapping
+        autocmd!
+        autocmd InsertCharPre * call v:lua.IntMainMapping()
+    augroup END
+]], false)
+
+-- Function to place cursor when "int main" is typed
+function _G.IntMainMapping()
+    local line = vim.fn.getline('.')
+    local col = vim.fn.col('.')
+    if line == 'int main' and col == 9 and vim.fn.fnamemodify(vim.fn.expand("%:p"),":e") == 'cpp' then
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Left>(){}<Left><Enter><Enter><Enter><Enter><Enter><Up><Tab>return 0;<Up><Up><Tab>", true, false, true), "n", true)
+    end
+end
+

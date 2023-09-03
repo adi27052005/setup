@@ -12,17 +12,17 @@ static const int horizpadbar        = 6;        /* horizontal padding for status
 static const int vertpadbar         = 7;        /* vertical padding for statusbar */
 static const char *fonts[]          = { "jetbrainsmononerdfont:size=8" };
 static const char dmenufont[]       = "jetbrainsmononerdfont:size=8";
-static const char col_gray1[]       = "#0a0217";
-static const char col_gray2[]       = "#111111";
+static const char col_gray1[]       = "#191e2a";
+static const char col_gray2[]       = "#000000";
 /* static const char col_gray3[]       = "#bbbbbb"; */
 static const char col_gray3[]       = "#ffffff";
 static const char col_gray4[]       = "#000000";
-static const char col_cyan[]        = "#a272f0";
+static const char col_cyan[]        = "#56b6c2";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
-	/* [SchemeTitle]  = { col_gray3, "#15052e",  col_cyan  }, */
+	[SchemeSel]  = { col_gray2, col_cyan,  col_cyan  },
+	/* [SchemeTitle]  = { col_gray3, "#262e40",  col_cyan  }, */
    	[SchemeHov]  = { col_gray4, col_cyan,  col_cyan  },
 	[SchemeHid]  = { col_cyan,  col_gray1, col_cyan  },
 
