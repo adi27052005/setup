@@ -20,7 +20,16 @@ theme = [
             "secondary_fg": "#ffffff",
             "gtk_theme": "Flat-Remix-GTK-Magenta-Dark-Solid",
             "wallpaper": "$HOME/wallpaper/blue.jpg"
-            }
+            },
+        {
+            "Name": "Red",
+            "primary_bg": "#df5b61",
+            "secondary_bg": "#07112c",
+            "primary_fg": "#000000",
+            "secondary_fg": "#ffffff",
+            "gtk_theme": "Flat-Remix-GTK-Magenta-Dark-Solid",
+            "wallpaper": "$HOME/wallpaper/red.jpg"
+            },
         ]
 
 l=[]
